@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Chemistry - Find Recipes with Videos & Ingredients</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #ff5a5a;
+            --secondary-color: #4ecdc4;
+            --dark-color: #80d29b;
+            --light-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #7fc6e4 0%, #9d69d0 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            background: rgb(255, 255, 255);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #606e79;
+            font-size: 1.1rem;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .search-box input {
+            border-radius: 50px;
+            padding: 15px 60px 15px 25px;
+            border: 2px solid #b9f1de;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+        }
+
+        .search-box button {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            border-radius: 50px;
+            padding: 10px 30px;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #ef5e5e;
+            transform: scale(1.05);
+        }
+
+        .suggestions {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .suggestion-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .suggestion-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+
+        .recipe-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recipe-title {
+            color: var(--dark-color);
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .section-title {
+            color: var(--dark-color);
+            font-weight: bold;
+            margin: 30px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .ingredient-item {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s;
+        }
+
+        .ingredient-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .ingredient-measure {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .utensil-card {
+            background: rgb(243, 244, 243);
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .utensil-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+        }
+
+        .utensil-icon {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .utensil-name {
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+
+        .buy-link {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .buy-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            display: none;
+            background: #ffe6e6;
+            color: #d32f2f;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #d32f2f;
+            margin: 20px 0;
+        }
+
+        .instructions-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .instruction-step {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .recipe-image {
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-utensils"></i> 
+kitchen Chemistry</h1>
+                <p>Search for any recipe and get videos, ingredients, and shopping links!</p>
+            </div>
+
+            <!-- Search Box -->
+            <div class="search-box">
+                <input type="text" class="form-control" id="recipeInput" placeholder="Enter a food name (e.g., biryani, butter chicken, pasta)...">
+                <button onclick="searchRecipe()"><i class="fas fa-search"></i> Search</button>
+            </div>
+
+            <!-- Popular Suggestions -->
+            <div class="suggestions">
+                <div class="suggestion-badge" onclick="searchSuggestion('biryani')">🍚 Biryani</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('butter chicken')">🍗 Butter Chicken</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('paneer tikka')">🧀 Paneer Tikka</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('dal makhani')">🍲 Dal Makhani</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('samosa')">🥟 Samosa</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('pasta')">🍝 Pasta</div>
+                <div class="suggestion-badge" onclick="searchSuggestion('pizza')">🍕 Pizza</div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading" id="loading">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Searching for delicious recipes...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage">
+                <strong><i class="fas fa-exclamation-triangle"></i> Oops!</strong>
+                <p id="errorText"></p>
+            </div>
+
+            <!-- Recipe Content -->
+            <div class="recipe-content" id="recipeContent">
+                <!-- Recipe Title -->
+                <h2 class="recipe-title" id="recipeTitle"></h2>
+
+                <div class="row">
+                    <!-- Video Section -->
+                    <div class="col-lg-8 mb-4">
+                        <div id="recipeImageContainer"></div>
+                        
+                        <h3 class="section-title">
+                            <i class="fas fa-video"></i>
+                            Recipe Video
+                        </h3>
+                        <div class="video-container" id="videoContainer"></div>
+
+                        <!-- Instructions -->
+                        <div class="instructions-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-list-ol"></i>
+                                Instructions
+                            </h3>
+                            <div id="instructionsContainer"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        <!-- Ingredients Section -->
+                        <h3 class="section-title">
+                            <i class="fas fa-shopping-basket"></i>
+                            Ingredients
+                        </h3>
+                        <div id="ingredientsContainer"></div>
+
+                        <!-- Utensils Section -->
+                        <h3 class="section-title mt-4">
+                            <i class="fas fa-tools"></i>
+                            Recommended Utensils
+                        </h3>
+                        <div id="utensilsContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Allow search on Enter key
+        document.getElementById('recipeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchRecipe();
+            }
+        });
+
+        function searchSuggestion(food) {
+            document.getElementById('recipeInput').value = food;
+            searchRecipe();
+        }
+
+        async function searchRecipe() {
+            const foodName = document.getElementById('recipeInput').value.trim();
+            
+            if (!foodName) {
+                showError('Please enter a food name!');
+                return;
+            }
+
+            // Show loading, hide error and content
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('recipeContent').style.display = 'none';
+
+            try {
+                // Try TheMealDB API first
+                let recipe = await fetchFromMealDB(foodName);
+                
+                // If not found in MealDB, use YouTube + Generic Recipe Format
+                if (!recipe) {
+                    recipe = await createGenericRecipe(foodName);
+                }
+
+                if (!recipe) {
+                    showError(`No recipes found for "${foodName}". Try searching for popular dishes like biryani, butter chicken, pasta, or pizza!`);
+                    return;
+                }
+
+                displayRecipe(recipe);
+
+            } catch (error) {
+                showError('Something went wrong! Please try again.');
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function fetchFromMealDB(foodName) {
+            try {
+                const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(foodName)}`);
+                const data = await response.json();
+
+                if (data.meals && data.meals.length > 0) {
+                    const meal = data.meals[0];
+                    return {
+                        name: meal.strMeal,
+                        youtube: meal.strYoutube,
+                        instructions: meal.strInstructions,
+                        ingredients: extractMealDBIngredients(meal),
+                        category: meal.strCategory,
+                        image: meal.strMealThumb,
+                        source: 'mealdb'
+                    };
+                }
+            } catch (error) {
+                console.error('MealDB error:', error);
+            }
+            return null;
+        }
+
+        function extractMealDBIngredients(meal) {
+            const ingredients = [];
+            for (let i = 1; i <= 20; i++) {
+                const ingredient = meal[`strIngredient${i}`];
+                const measure = meal[`strMeasure${i}`];
+                if (ingredient && ingredient.trim()) {
+                    ingredients.push({
+                        name: ingredient,
+                        measure: measure || ''
+                    });
+                }
+            }
+            return ingredients;
+        }
+
+        async function createGenericRecipe(foodName) {
+            // Create a generic recipe with YouTube search
+            const recipes = getCommonRecipes();
+            const foundRecipe = recipes.find(r => 
+                r.name.toLowerCase().includes(foodName.toLowerCase()) ||
+                foodName.toLowerCase().includes(r.name.toLowerCase())
+            );
+
+            if (foundRecipe) {
+                return {
+                    name: foundRecipe.name,
+                    youtube: null, // Will show YouTube search button
+                    instructions: foundRecipe.instructions,
+                    ingredients: foundRecipe.ingredients,
+                    category: foundRecipe.category,
+                    image: foundRecipe.image,
+                    source: 'generic'
+                };
+            }
+
+            // If not in common recipes, create basic template
+            return {
+                name: foodName.charAt(0).toUpperCase() + foodName.slice(1),
+                youtube: null,
+                instructions: `To make ${foodName}:\n1. Gather all ingredients\n2. Follow traditional cooking methods\n3. Cook until done\n4. Serve hot and enjoy!`,
+                ingredients: [
+                    { name: 'Main ingredient', measure: 'As needed' },
+                    { name: 'Spices', measure: 'To taste' },
+                    { name: 'Oil', measure: '2-3 tbsp' }
+                ],
+                category: 'General',
+                image: null,
+                source: 'generic'
+            };
+        }
+
+        function getCommonRecipes() {
+            return [
+                {
+                    name: 'Chicken Biryani',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500',
+                    instructions: '1. Marinate chicken with yogurt and spices for 2 hours\n2. Cook rice until 70% done\n3. Layer rice and chicken\n4. Cook on dum for 30 minutes\n5. Serve with raita',
+                    ingredients: [
+                        { name: 'Basmati Rice', measure: '2 cups' },
+                        { name: 'Chicken', measure: '500g' },
+                        { name: 'Yogurt', measure: '1 cup' },
+                        { name: 'Onions', measure: '3 sliced' },
+                        { name: 'Ginger-Garlic Paste', measure: '2 tbsp' },
+                        { name: 'Biryani Masala', measure: '3 tbsp' },
+                        { name: 'Saffron', measure: 'Few strands' },
+                        { name: 'Ghee', measure: '4 tbsp' }
+                    ]
+                },
+                {
+                    name: 'Butter Chicken',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500',
+                    instructions: '1. Marinate chicken in yogurt and spices\n2. Grill or pan-fry chicken pieces\n3. Prepare tomato-based gravy with butter and cream\n4. Add chicken to gravy\n5. Simmer for 10 minutes\n6. Garnish with cream and serve with naan',
+                    ingredients: [
+                        { name: 'Chicken', measure: '500g' },
+                        { name: 'Butter', measure: '4 tbsp' },
+                        { name: 'Cream', measure: '1 cup' },
+                        { name: 'Tomato Puree', measure: '2 cups' },
+                        { name: 'Yogurt', measure: '1/2 cup' },
+                        { name: 'Garam Masala', measure: '2 tsp' },
+                        { name: 'Kasuri Methi', measure: '1 tbsp' }
+                    ]
+                },
+                {
+                    name: 'Paneer Tikka',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=500',
+                    instructions: '1. Cut paneer and vegetables into cubes\n2. Marinate in yogurt and spices for 1 hour\n3. Thread onto skewers\n4. Grill or bake at 200°C for 20 minutes\n5. Serve hot with mint chutney',
+                    ingredients: [
+                        { name: 'Paneer', measure: '400g cubed' },
+                        { name: 'Bell Peppers', measure: '2 diced' },
+                        { name: 'Yogurt', measure: '1 cup' },
+                        { name: 'Tikka Masala', measure: '3 tbsp' },
+                        { name: 'Lemon Juice', measure: '2 tbsp' },
+                        { name: 'Ginger-Garlic Paste', measure: '1 tbsp' }
+                    ]
+                },
+                {
+                    name: 'Dal Makhani',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500',
+                    instructions: '1. Soak black lentils overnight\n2. Pressure cook until soft\n3. Prepare tomato-butter gravy\n4. Add cooked lentils\n5. Simmer for 30 minutes\n6. Add cream and serve with rice',
+                    ingredients: [
+                        { name: 'Black Lentils', measure: '1 cup' },
+                        { name: 'Red Kidney Beans', measure: '1/4 cup' },
+                        { name: 'Butter', measure: '3 tbsp' },
+                        { name: 'Cream', measure: '1/2 cup' },
+                        { name: 'Tomatoes', measure: '3 pureed' },
+                        { name: 'Ginger-Garlic', measure: '1 tbsp' },
+                        { name: 'Garam Masala', measure: '1 tsp' }
+                    ]
+                },
+                {
+                    name: 'Samosa',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500',
+                    instructions: '1. Prepare dough with flour and ghee\n2. Make potato filling with spices\n3. Roll dough and cut into triangles\n4. Fill and fold into triangular pockets\n5. Deep fry until golden\n6. Serve with chutney',
+                    ingredients: [
+                        { name: 'All Purpose Flour', measure: '2 cups' },
+                        { name: 'Potatoes', measure: '4 boiled' },
+                        { name: 'Peas', measure: '1/2 cup' },
+                        { name: 'Cumin Seeds', measure: '1 tsp' },
+                        { name: 'Garam Masala', measure: '1 tsp' },
+                        { name: 'Oil for frying', measure: 'As needed' }
+                    ]
+                },
+                {
+                    name: 'Chole Bhature',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=500',
+                    instructions: '1. Soak chickpeas overnight and pressure cook\n2. Prepare spicy tomato-onion gravy\n3. Add chickpeas and simmer\n4. Make bhature dough and deep fry\n5. Serve hot together',
+                    ingredients: [
+                        { name: 'Chickpeas', measure: '2 cups soaked' },
+                        { name: 'All Purpose Flour', measure: '3 cups' },
+                        { name: 'Yogurt', measure: '1/2 cup' },
+                        { name: 'Onions', measure: '2 diced' },
+                        { name: 'Tomatoes', measure: '3 pureed' },
+                        { name: 'Chole Masala', measure: '3 tbsp' }
+                    ]
+                },
+                {
+                    name: 'Palak Paneer',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500',
+                    instructions: '1. Blanch spinach and blend to paste\n2. Fry paneer cubes\n3. Prepare onion-tomato base\n4. Add spinach paste\n5. Add paneer and cream\n6. Serve with roti',
+                    ingredients: [
+                        { name: 'Spinach', measure: '500g' },
+                        { name: 'Paneer', measure: '300g cubed' },
+                        { name: 'Cream', measure: '1/4 cup' },
+                        { name: 'Onions', measure: '2 diced' },
+                        { name: 'Tomatoes', measure: '2 diced' },
+                        { name: 'Garam Masala', measure: '1 tsp' }
+                    ]
+                },
+                {
+                    name: 'Mutton Curry',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500',
+                    instructions: '1. Marinate mutton with yogurt and spices\n2. Pressure cook until tender\n3. Prepare rich onion-tomato gravy\n4. Add cooked mutton\n5. Simmer until gravy thickens\n6. Garnish with coriander and serve',
+                    ingredients: [
+                        { name: 'Mutton', measure: '750g' },
+                        { name: 'Yogurt', measure: '1 cup' },
+                        { name: 'Onions', measure: '4 sliced' },
+                        { name: 'Tomatoes', measure: '3 pureed' },
+                        { name: 'Ginger-Garlic Paste', measure: '3 tbsp' },
+                        { name: 'Red Chili Powder', measure: '2 tsp' },
+                        { name: 'Garam Masala', measure: '2 tsp' },
+                        { name: 'Oil', measure: '4 tbsp' }
+                    ]
+                },
+                {
+                    name: 'Chicken Tikka Masala',
+                    category: 'Indian',
+                    image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500',
+                    instructions: '1. Marinate chicken in tikka spices\n2. Grill chicken pieces\n3. Prepare creamy tomato gravy\n4. Add grilled chicken\n5. Simmer and add cream\n6. Serve with naan',
+                    ingredients: [
+                        { name: 'Chicken', measure: '600g' },
+                        { name: 'Yogurt', measure: '1 cup' },
+                        { name: 'Tikka Masala', measure: '3 tbsp' },
+                        { name: 'Tomato Puree', measure: '2 cups' },
+                        { name: 'Cream', measure: '1/2 cup' },
+                        { name: 'Butter', measure: '3 tbsp' },
+                        { name: 'Kasuri Methi', measure: '1 tbsp' }
+                    ]
+                }
+            ];
+        }
+
+        function displayRecipe(recipe) {
+            // Set recipe title
+            document.getElementById('recipeTitle').textContent = recipe.name;
+
+            // Display image if available
+            displayImage(recipe.image);
+
+            // Display video
+            displayVideo(recipe.youtube, recipe.name);
+
+            // Display ingredients
+            displayIngredients(recipe.ingredients);
+
+            // Display instructions
+            displayInstructions(recipe.instructions);
+
+            // Display utensils
+            displayUtensils(recipe);
+
+            // Show recipe content
+            document.getElementById('recipeContent').style.display = 'block';
+            
+            // Scroll to recipe
+            document.getElementById('recipeContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function displayImage(imageUrl) {
+            const container = document.getElementById('recipeImageContainer');
+            if (imageUrl) {
+                container.innerHTML = `<img src="${imageUrl}" alt="Recipe" class="recipe-image">`;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        function displayVideo(youtubeUrl, recipeName) {
+            const videoContainer = document.getElementById('videoContainer');
+            
+            if (youtubeUrl && youtubeUrl.includes('youtube.com/watch')) {
+                // Extract video ID from YouTube URL
+                const videoId = youtubeUrl.split('v=')[1]?.split('&')[0];
+                if (videoId) {
+                    videoContainer.innerHTML = `
+                        <iframe src="https://www.youtube.com/embed/${videoId}" 
+                                allowfullscreen>
+                        </iframe>
+                    `;
+                    return;
+                }
+            }
+            
+            // If no direct video, create a search link
+            const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(recipeName + ' recipe')}`;
+            videoContainer.innerHTML = `
+                <div class="alert alert-info text-center p-4">
+                    <i class="fas fa-video fa-3x mb-3" style="color: var(--primary-color);"></i>
+                    <h5>Video Tutorial</h5>
+                    <p>Click below to find video recipes on YouTube</p>
+                    <a href="${searchUrl}" target="_blank" class="btn btn-primary">
+                        <i class="fab fa-youtube"></i> Search YouTube Videos
+                    </a>
+                </div>
+            `;
+        }
+
+        function displayIngredients(ingredients) {
+            const container = document.getElementById('ingredientsContainer');
+            let ingredientsHTML = '';
+
+            ingredients.forEach(ingredient => {
+                ingredientsHTML += `
+                    <div class="ingredient-item">
+                        <i class="fas fa-check-circle" style="color: var(--secondary-color);"></i>
+                        <span class="ingredient-measure">${ingredient.measure || ''}</span>
+                        <strong>${ingredient.name}</strong>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = ingredientsHTML;
+        }
+
+        function displayInstructions(instructions) {
+            const container = document.getElementById('instructionsContainer');
+            
+            if (!instructions) {
+                container.innerHTML = '<p>No instructions available.</p>';
+                return;
+            }
+
+            // Split instructions by period or new line
+            const steps = instructions.split(/\r?\n/).filter(step => step.trim().length > 0);
+            
+            let instructionsHTML = '';
+            steps.forEach((step, index) => {
+                if (step.trim()) {
+                    instructionsHTML += `
+                        <div class="instruction-step">
+                            <strong>Step ${index + 1}:</strong> ${step.trim()}
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = instructionsHTML;
+        }
+
+        function displayUtensils(recipe) {
+            const container = document.getElementById('utensilsContainer');
+            
+            // Common utensils based on recipe analysis
+            const utensils = getRecommendedUtensils(recipe);
+            
+            let utensilsHTML = '';
+            utensils.forEach(utensil => {
+                const amazonSearchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(utensil.name)}`;
+                
+                utensilsHTML += `
+                    <a href="${amazonSearchUrl}" target="_blank" class="utensil-card">
+                        <div class="utensil-icon">
+                            <i class="${utensil.icon}"></i>
+                        </div>
+                        <div class="utensil-name">${utensil.name}</div>
+                        <div class="buy-link">
+                            <i class="fas fa-shopping-cart"></i> Buy on Amazon →
+                        </div>
+                    </a>
+                `;
+            });
+
+            container.innerHTML = utensilsHTML;
+        }
+
+        function getRecommendedUtensils(recipe) {
+            const utensils = [];
+            const instructions = (recipe.instructions || '').toLowerCase();
+            const category = (recipe.category || '').toLowerCase();
+            const name = (recipe.name || '').toLowerCase();
+
+            // Common utensils mapping
+            const utensilsList = [
+                { name: 'Pressure Cooker', icon: 'fas fa-temperature-high', keywords: ['pressure', 'cooker', 'biryani', 'dal', 'chickpeas', 'mutton'] },
+                { name: 'Kadai/Wok', icon: 'fas fa-fire', keywords: ['kadai', 'wok', 'curry', 'masala', 'tikka', 'fry'] },
+                { name: 'Mixing Bowl', icon: 'fas fa-bowl-food', keywords: ['mix', 'bowl', 'combine', 'whisk', 'marinate'] },
+                { name: 'Frying Pan', icon: 'fas fa-fire-burner', keywords: ['fry', 'pan', 'sauté', 'cook', 'sear'] },
+                { name: 'Baking Tray', icon: 'fas fa-cookie', keywords: ['bake', 'oven', 'tray', 'sheet', 'roast', 'grill'] },
+                { name: 'Pot', icon: 'fas fa-pot-food', keywords: ['pot', 'boil', 'simmer', 'stew'] },
+                { name: 'Knife Set', icon: 'fas fa-utensils', keywords: ['chop', 'cut', 'slice', 'dice', 'mince'] },
+                { name: 'Measuring Cups', icon: 'fas fa-fill-drip', keywords: ['cup', 'measure', 'tbsp', 'tsp', 'tablespoon'] },
+                { name: 'Whisk', icon: 'fas fa-whistle', keywords: ['whisk', 'beat', 'mix'] },
+                { name: 'Spatula', icon: 'fas fa-utensil-spoon', keywords: ['flip', 'stir', 'spatula'] },
+                { name: 'Tawa/Griddle', icon: 'fas fa-circle', keywords: ['tawa', 'griddle', 'roti', 'paratha', 'dosa'] },
+                { name: 'Grater', icon: 'fas fa-grip-lines', keywords: ['grate', 'shred'] }
+            ];
+
+            // Check which utensils are mentioned
+            utensilsList.forEach(utensil => {
+                const found = utensil.keywords.some(keyword => 
+                    instructions.includes(keyword) || name.includes(keyword)
+                );
+                if (found && utensils.length < 6) {
+                    utensils.push(utensil);
+                }
+            });
+
+            // Add default utensils if none found
+            if (utensils.length === 0) {
+                utensils.push(
+                    { name: 'Mixing Bowl', icon: 'fas fa-bowl-food' },
+                    { name: 'Knife Set', icon: 'fas fa-utensils' },
+                    { name: 'Measuring Cups', icon: 'fas fa-fill-drip' }
+                );
+            }
+
+            return utensils;
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('recipeContent').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
